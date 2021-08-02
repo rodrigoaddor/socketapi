@@ -94,7 +94,7 @@ io.on('connection', (socket) => {
     }
 
     if (!room.joinable) {
-      return callback({status: 'error', code: 'NOT_JOINABLE'})
+      return callback({ status: 'error', code: 'NOT_JOINABLE' });
     }
 
     try {
@@ -133,7 +133,10 @@ loadProtocol(Ask);
 
 // Create debug room
 if (process.env.NODE_ENV === 'development') {
-  rooms.set('DEBUG', new Ask(io, 'DEBUG'));
+  ['', ':QUESTION', ':ANSWER', ':RESULT'].forEach((suffix) => {
+    rooms.set(`DEBUG${suffix}`, new Ask(io, `DEBUG${suffix}`));
+  });
+
   console.log('Created debug `ASK` room with id `DEBUG`');
 }
 

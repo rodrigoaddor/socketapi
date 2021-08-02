@@ -1,4 +1,4 @@
-import { Socket } from 'socket.io';
+import { Socket, Server } from 'socket.io';
 import { Room } from '../../Generic/Room';
 import { nextIn } from '../../Util/array';
 
@@ -12,6 +12,27 @@ export default class Ask extends Room {
   ready = new Set<string>();
   answers: [string, string[]][] = [];
   currentAnswer: number = 0;
+
+  isDebug: boolean = false;
+
+  constructor(io: Server, id: string) {
+    super(io, id);
+
+    const [isDebug, debugMode] = id.toLocaleLowerCase().split(':') as [string, GameStage | undefined];
+    this.isDebug = isDebug === 'debug';
+
+    if (isDebug && debugMode && Ask.stages.includes(debugMode)) {
+      this.stage = debugMode;
+
+      if (debugMode === 'answer') {
+        const mockQuestions = Array.from({ length: 5 }, (_, i) => `Question ${i + 1}`);
+        this.answers = mockQuestions.map((question) => [question, []]);
+      } else if (debugMode === 'result') {
+        const mockQuestions = Array.from({ length: 5 }, (_, i) => `Question ${i + 1}`);
+        this.answers = mockQuestions.map((question) => [question, [`Answer 1 - Q#${question.split(' ')[1]}`]]);
+      }
+    }
+  }
 
   public get status(): Status {
     const data: Status = {
@@ -32,7 +53,7 @@ export default class Ask extends Room {
   }
 
   public get joinable(): boolean {
-    return this.stage === 'waiting';
+    return this.isDebug || this.stage === 'waiting';
   }
 
   onJoin(socket: Socket) {
@@ -62,10 +83,11 @@ export default class Ask extends Room {
           this.currentAnswer++;
         } else {
           if (this.stage === 'result') {
-            this.answers = [];
+            if (!this.isDebug) this.answers = [];
             this.currentAnswer = 0;
           }
-          this.stage = nextIn<GameStage>(Ask.stages, this.stage);
+
+          if (!this.isDebug) this.stage = nextIn<GameStage>(Ask.stages, this.stage);
           this.ready.clear();
         }
       }
