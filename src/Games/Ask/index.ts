@@ -19,7 +19,7 @@ export default class Ask extends Room {
     super(io, id);
 
     const [isDebug, debugMode] = id.toLocaleLowerCase().split(':') as [string, GameStage | undefined];
-    this.isDebug = isDebug === 'debug';
+    this.isDebug = isDebug === 'debug' && !!debugMode;
 
     if (isDebug && debugMode && Ask.stages.includes(debugMode)) {
       this.stage = debugMode;
